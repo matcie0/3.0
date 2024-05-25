@@ -1,0 +1,1 @@
+{'analiza': {'items': ['kartkówki', 'kolosy'], 'sublists': {'kartkówki': {'items': ['1', '2', '3', '4', '5'], 'sublists': {}}, 'kolosy': {'items': ['1', '2'], 'sublists': {}}}}, 'algebra': {'items': ['kolosy'], 'sublists': {'kolosy': {'items': ['1', '2'], 'sublists': {}}}}}

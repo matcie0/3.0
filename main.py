@@ -12,6 +12,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Aplikacja z trzema sekcjami")
         self.setGeometry(100, 100, 1200, 600)
 
+        self.sublist_data = {}  # Dictionary to store sublist items
+
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
@@ -67,7 +69,11 @@ class MainWindow(QMainWindow):
         self.populate_table(top_section_table)
         self.populate_table(right_bottom_table)
 
-        self.list_widget.itemClicked.connect(lambda item: self.open_sublist(item, self.left_bottom_section_splitter))
+        self.list_widget.itemClicked.connect(lambda item: self.open_sublist(item, self.left_bottom_section_splitter, self.sublist_data, 1))
+
+        # Load list items from file
+        self.load_items_from_file()
+        self.load_sublists_from_file()
 
     def populate_table(self, table):
         for row in range(table.rowCount()):
@@ -79,8 +85,9 @@ class MainWindow(QMainWindow):
         if text:
             self.list_widget.addItem(text)
             self.input_line.clear()
+            self.save_items_to_file()
 
-    def open_sublist(self, item, splitter):
+    def open_sublist(self, item, splitter, current_data, level):
         if splitter.count() > 1:
             splitter.widget(1).deleteLater()
 
@@ -96,10 +103,15 @@ class MainWindow(QMainWindow):
 
         sub_input_line = QLineEdit()
         sub_add_button = QPushButton("Dodaj napis do podlisty")
-        sub_add_button.clicked.connect(lambda: self.add_item_to_sublist(sublist, sub_input_line))
+        sub_add_button.clicked.connect(lambda: self.add_item_to_sublist(sublist, sub_input_line, item.text(), current_data, level))
 
         sublist_layout.addWidget(sub_input_line)
         sublist_layout.addWidget(sub_add_button)
+
+        # Load existing items for the selected sublist
+        if item.text() in current_data:
+            for sub_item_text in current_data[item.text()]["items"]:
+                sublist.addItem(sub_item_text)
 
         sublist_splitter.addWidget(sublist_widget)
 
@@ -108,13 +120,52 @@ class MainWindow(QMainWindow):
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 1)
 
-        sublist.itemClicked.connect(lambda sub_item: self.open_sublist(sub_item, sublist_splitter))
+        if level == 1:
+            sublist.itemClicked.connect(lambda sub_item: self.open_sublist(sub_item, sublist_splitter, current_data[item.text()]["sublists"], 2))
 
-    def add_item_to_sublist(self, sublist, sub_input_line):
+    def add_item_to_sublist(self, sublist, sub_input_line, parent_item_text, current_data, level):
         text = sub_input_line.text()
         if text:
             sublist.addItem(text)
             sub_input_line.clear()
+
+            if parent_item_text not in current_data:
+                current_data[parent_item_text] = {"items": [], "sublists": {}}
+            current_data[parent_item_text]["items"].append(text)
+            self.save_sublist_to_file()
+
+    def save_items_to_file(self):
+        items = [self.list_widget.item(i).text() for i in range(self.list_widget.count())]
+        with open("items.txt", "w") as file:
+            file.write("\n".join(items))
+
+    def load_items_from_file(self):
+        try:
+            with open("items.txt", "r") as file:
+                items = file.readlines()
+                for item in items:
+                    self.list_widget.addItem(item.strip())
+        except FileNotFoundError:
+            pass
+
+    def save_sublist_to_file(self):
+        def serialize_sublists(data):
+            return {key: {"items": value["items"], "sublists": serialize_sublists(value["sublists"])} for key, value in data.items()}
+
+        with open("sublists.txt", "w") as file:
+            file.write(str(serialize_sublists(self.sublist_data)))
+
+    def load_sublists_from_file(self):
+        def deserialize_sublists(data):
+            return {key: {"items": value["items"], "sublists": deserialize_sublists(value["sublists"])} for key, value in data.items()}
+
+        try:
+            with open("sublists.txt", "r") as file:
+                content = file.read()
+                if content:
+                    self.sublist_data = deserialize_sublists(eval(content))
+        except FileNotFoundError:
+            pass
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
