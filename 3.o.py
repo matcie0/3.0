@@ -196,7 +196,7 @@ class MainWindow(QMainWindow):
         try:
             with open("sumowane_punkty.txt", "a") as file:
                 file.write(f"Suma dla '{parent_item_text}': {punkty_otrzymane}\n")
-            print(f"Sum for '{parent_item_text}' saved to sumowane_punkty.txt")
+            print(f"Suma dla '{parent_item_text}' zapisnaych w sumowane_punkty.txt")
         except blad as e:
             print(f"Bład przy tworzeniu sumy:{e}")
 if __name__ == "__main__":
