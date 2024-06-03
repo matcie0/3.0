@@ -198,7 +198,7 @@ class MainWindow(QMainWindow):
                 file.write(f"Suma dla '{parent_item_text}': {punkty_otrzymane}\n")
             print(f"Suma dla '{parent_item_text}'")
         except Exception as e:
-            print(f"Bład przy tworzeniu sumy:{e}")
+            print(f"Błąd przy tworzeniu sumy:{e}")
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     main_window = MainWindow()
