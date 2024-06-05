@@ -312,10 +312,10 @@ class MainWindow(QMainWindow):
                 sublist.addItem(sub_item_text)
 # Tworzymy przycisk do sumowania
         if level == 2:
-            sum_button = QPushButton("Sumuj swoje punkty!")
-            sum_button.clicked.connect(
-                lambda: self.sum_sublist_items(item.text()))
-            sublist_layout.addWidget(sum_button)
+            suma_przycisk = QPushButton("Sumuj swoje punkty!")
+            suma_przycisk.clicked.connect(
+                lambda: self.suma(item.text()))
+            sublist_layout.addWidget(suma_przycisk)
 
         sublist_splitter.addWidget(sublist_widget)
 
@@ -378,7 +378,7 @@ class MainWindow(QMainWindow):
             print(f"Error loading sublists: {e}")
 # Kod by zliczało sumę punktów
 
-    def sum_sublist_items(self, parent_item_text):
+    def suma(self, parent_item_text):
         try:
             punkty_otrzymane = {}  # słownik przechowujący sume pkt.
 
@@ -396,13 +396,13 @@ class MainWindow(QMainWindow):
              # Tworze okienko, które bedzie sie wyświetlało
             QMessageBox.information(
                 self, "Sumuj swoje punkty!", f"Twoje punkty: {punkty_otrzymane}")
-            self.save_sum_to_file(parent_item_text, punkty_otrzymane)
+            self.zapis_sumy(parent_item_text, punkty_otrzymane)
         except ValueError:
             QMessageBox.warning(
                 self, "Błąd", "Zostały wprowadzone niepoprawne dane, upwenij się, że są to liczby")
 # robię teraz aby suma się zapisywała w pliku txt
 
-    def save_sum_to_file(self, parent_item_text, punkty_otrzymane):
+    def zapis_sumy(self, parent_item_text, punkty_otrzymane):
         try:
             with open("sumowane_punkty.txt", "a") as file:
                 file.write(
@@ -417,17 +417,3 @@ if __name__ == "__main__":
     main_window = MainWindow()
     main_window.show()
     sys.exit(app.exec_())
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
