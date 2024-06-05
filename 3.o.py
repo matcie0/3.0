@@ -221,9 +221,7 @@ class MainWindow(QMainWindow):
 
 # Duża sekcja na górze
         top_section_layout = QVBoxLayout()
-        top_section_table = QTableWidget(5, 3)  # 5 wierszy, 3 kolumny
-        top_section_table.setHorizontalHeaderLabels(
-            ["Kolumna 1", "Kolumna 2", "Kolumna 3"])
+        top_section_table = QTableWidget()
         top_section_layout.addWidget(top_section_table)
 
 # Dodanie dużej sekcji do głównego layoutu
@@ -396,7 +394,6 @@ class MainWindow(QMainWindow):
              # Tworze okienko, które bedzie sie wyświetlało
             QMessageBox.information(
                 self, "Sumuj swoje punkty!", f"Twoje punkty: {punkty_otrzymane}")
-            self.zapis_sumy(parent_item_text, punkty_otrzymane)
         except ValueError:
             QMessageBox.warning(
                 self, "Błąd", "Zostały wprowadzone niepoprawne dane, upwenij się, że są to liczby")
@@ -405,11 +402,9 @@ class MainWindow(QMainWindow):
     def zapis_sumy(self, parent_item_text, punkty_otrzymane):
         try:
             with open("sumowane_punkty.txt", "a") as file:
-                file.write(
-                    f"Suma dla '{parent_item_text}': {punkty_otrzymane}\n")
-            print(f"Suma dla '{parent_item_text}'")
+                file.write(f"{punkty_otrzymane}\n")
         except Exception as e:
-            print(f"Błąd przy tworzeniu sumy:{e}")
+            print(f"Błąd przy zapisywaniu sumy, niepoprawne wartości: {e}")
 
 
 if __name__ == "__main__":
