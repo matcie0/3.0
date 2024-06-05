@@ -392,11 +392,10 @@ class MainWindow(QMainWindow):
                         for punkt in punkty["items"]:
                             punkty_otrzymane[przedmioty] += float(punkt)
              # Tworze okienko, które bedzie sie wyświetlało
-            QMessageBox.information(
-                self, "Sumuj swoje punkty!", f"Twoje punkty: {punkty_otrzymane}")
+            QMessageBox.information(self, "Sumuj swoje punkty!", f"Twoje punkty: {punkty_otrzymane}")
+            self.zapis_sumy(parent_item_text, punkty_otrzymane)
         except ValueError:
-            QMessageBox.warning(
-                self, "Błąd", "Zostały wprowadzone niepoprawne dane, upwenij się, że są to liczby")
+            QMessageBox.warning(self, "Błąd", "Zostały wprowadzone niepoprawne dane, upwenij się, że są to liczby")
 # robię teraz aby suma się zapisywała w pliku txt
 
     def zapis_sumy(self, parent_item_text, punkty_otrzymane):
