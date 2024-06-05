@@ -47,7 +47,7 @@
 16	1	2024	Kolos z algebry	Pani Pilarczyk nie ma :(	True
 17	1	2024			True
 18	1	2024			True
-19	1	2024		Nie ma zajêæ z Lenczim	True
+19	1	2024		Nie ma zaj z Lenczim	True
 20	1	2024			False
 21	1	2024			False
 22	1	2024			True
