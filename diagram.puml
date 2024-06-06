@@ -1,0 +1,62 @@
+@startuml
+
+class kalendarz {
+  -miesiace: list
+  -czy_ustawiamy_dni_uczelniane: bool
+  -aktualnie_wyswietlany_miesiac: int
+  -tabela_glowna: QTableWidget
+  __init__()
+  ustaw_wyswietlany_miesiac_na_teraz()
+  przesuń_wyswietlany_miesiac_o_x(x: int)
+  zaktualizuj_kalendarz()
+  zapisz_kalendarz()
+  wyswietl_aktualny_miesiac()
+  ustaw_aktualna_date_w_kalendarzu()
+  inicjalizuj_kalendarz()
+}
+
+class miesiac {
+  -numer_miesiaca: int
+  -rok: int
+  -lista_dni: list
+  __init__(rok: int, numer_miesiaca: int, lista_dni: list)
+}
+
+class dzien {
+  -dzien: int
+  -miesiac: int
+  -rok: int
+  -dzien_tygodnia: int
+  -text: str
+  -notatka_poboczna: str
+  -czy_uczelniany: bool
+  -przycisk: QPushButton
+  __init__(dzien: int, miesiac: int, rok: int, text: str, notatka_poboczna: str, czy_uczelniany: bool)
+  wstaw_przycisk(wiersz: int, kolumna: int, tabela: QTableWidget)
+}
+
+miesiac *--> kalendarz
+dzien *--> miesiac
+
+class MainWindow {
+  -sublist_data: dict
+  -list_widget: QListWidget
+  -input_line: QLineEdit
+  -add_button: QPushButton
+  -left_bottom_section_splitter: QSplitter
+  __init__()
+  populate_table(table: QTableWidget)
+  add_item_to_list()
+  open_sublist(item: QListWidgetItem, splitter: QSplitter, current_data: dict, level: int)
+  add_item_to_sublist(sublist: QListWidget, sub_input_line: QLineEdit, parent_item_text: str, current_data: dict, level: int)
+  save_items_to_file()
+  load_items_from_file()
+  save_sublist_to_file()
+  load_sublists_from_file()
+  suma(parent_item_text: str)
+  zapis_sumy(parent_item_text: str, punkty_otrzymane: dict)
+}
+
+kalendarz *--> MainWindow
+
+@enduml
