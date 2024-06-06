@@ -421,12 +421,9 @@ class MainWindow(QMainWindow):
     def zapis_sumy(self, parent_item_text, punkty_otrzymane):
         try:
             with open("sumowane_punkty.txt", "a") as file:
-                file.write(
-                    f"Suma dla '{parent_item_text}': {punkty_otrzymane}\n")
-            print(f"Suma dla '{parent_item_text}'")
+                file.write(f"{punkty_otrzymane}\n")
         except Exception as e:
-            print(f"Błąd przy tworzeniu sumy:{e}")
-
+            print(f"Błąd przy zapisywaniu sumy, niepoprawne wartości: {e}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
