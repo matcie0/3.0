@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QDialog, QLineEd
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-class kalendarz:
+class kalendarz:    
     """
     Klasa obsługująca cały kalendarz: wczytywanie, zapisywanie,
     wyświetlanie oraz wszystkie potrzebne funkcje
@@ -217,9 +217,9 @@ class PlotWidget(QWidget):
 
 #tu sie zmienia wykres
     def plot(self, data):
-        procenty=[1,20,30,40,50,60,70,80,90,100]
+        procenty=[1,20,30,40,80,90,100]
         self.axis.clear()
-        self.axis.scatter(data,procenty)
+        self.axis.bar(data,procenty)
         self.canvas.draw()
 
 class MainWindow(QMainWindow):
@@ -230,7 +230,7 @@ class MainWindow(QMainWindow):
          # Dodanie wykresu do sekcji górnej
         self.plot_widget = PlotWidget()
         top_section_layout.addWidget(self.plot_widget)
-        self.plot_widget.plot([0, 1, 2, 3, 4,5,6,7, 8, 9])
+        self.plot_widget.plot([0, 1, 0, 3, 7,2,6])
 
         self.setWindowTitle("Aplikacja 3.0")
         # ustawienie rozmiaru wyświetlanego okna aplikacji
