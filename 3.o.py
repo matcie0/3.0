@@ -7,7 +7,7 @@ from datetime import datetime
 import calendar
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QTableWidget,
-    QTableWidgetItem, QListWidget, QPushButton, QLineEdit, QLabel, QSplitter, QInputDialog, QMessageBox
+    QTableWidgetItem, QListWidget, QPushButton, QLineEdit, QLabel, QSplitter, QInputDialog, QMessageBox, QListWidgetItem, 
 )
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QDialog, QLineEdit, QLabel, QPushButton, QDialogButtonBox
@@ -203,7 +203,6 @@ class dzien:
         self.przycisk = QPushButton(f"{self.dzien}")
         tabela.setCellWidget(wiersz, kolumna, self.przycisk)
 
-
 kalendarzyk = kalendarz()
 
 class PlotWidget(QWidget):
@@ -221,6 +220,35 @@ class PlotWidget(QWidget):
         self.axis.clear()
         self.axis.bar(data,procenty)
         self.canvas.draw()
+
+
+class ListItemWidget(QWidget):
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+        self.initUI()
+    
+    def initUI(self):
+        layout = QHBoxLayout()
+        
+        self.label = QLabel(self.name)
+        self.textBox = QLineEdit()
+        self.saveButton = QPushButton("Zapisz")
+        self.saveButton.clicked.connect(self.saveText)
+        
+        layout.addWidget(self.label)
+        layout.addWidget(self.textBox)
+        layout.addWidget(self.saveButton)
+        
+        self.setLayout(layout)
+    
+    def saveText(self):
+        text = self.textBox.text()
+        try:
+            with open("progi.txt", 'a') as file:
+                file.write(f"{self.name}: {text}\n")
+        except Exception as e:
+            print(f"Error saving text to file: {e}")
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -245,7 +273,7 @@ class MainWindow(QMainWindow):
 
 # Dodanie dużej sekcji do głównego layoutu
         main_layout.addLayout(top_section_layout)
-# Sekcja dolna- zadanie Marty i Mateusza - zliczanie punktów i przedmioty
+# Sekcja lewa dolna - zadanie Marty i Mateusza - zliczanie punktów i przedmioty
         bottom_section_layout = QHBoxLayout()
 # Lewa dolna sekcja - lista z możliwością dodawania napisów
         self.left_bottom_section_splitter = QSplitter(Qt.Horizontal)
@@ -258,19 +286,25 @@ class MainWindow(QMainWindow):
         self.list_widget = QListWidget()
         self.left_bottom_section_layout.addWidget(QLabel("Twoje przedmioty:"))
         self.left_bottom_section_layout.addWidget(self.list_widget)
-
+        #przycisk do dodawania przedmiotów
         self.input_line = QLineEdit()
-        self.add_button = QPushButton("Dodaj napis")
+        self.add_button = QPushButton("Dodaj przedmiot")
         self.add_button.clicked.connect(self.add_item_to_list)
+
+        #przycisk do dodawania progów punktowych dla przedmiotów
+        self.input_line = QLineEdit()
+        self.dodaj_progi_button = QPushButton("Dodaj progi")
+        self.dodaj_progi_button.clicked.connect(self.dodaj_progi_punktowe)
 
         self.left_bottom_section_layout.addWidget(self.input_line)
         self.left_bottom_section_layout.addWidget(self.add_button)
+        self.left_bottom_section_layout.addWidget(self.dodaj_progi_button)
+
 
         self.left_bottom_section_splitter.addWidget(left_bottom_section_widget)
 
 # Prawa dolna sekcja
         right_bottom_section_widget = QWidget()
-
 
 # Dodanie małych sekcji do głównego layoutu
         bottom_section_layout.addWidget(self.left_bottom_section_splitter)
@@ -280,18 +314,12 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(bottom_section_layout)
 
 # dodanie danych
-
         self.list_widget.itemClicked.connect(lambda item: self.open_sublist(
             item, self.left_bottom_section_splitter, self.sublist_data, 1))
+
 # Ładujemy liste itemsów z plików
         self.load_items_from_file()
         self.load_sublists_from_file()
-
-    def populate_table(self, table):
-        for row in range(table.rowCount()):
-            for col in range(table.columnCount()):
-                table.setItem(row, col, QTableWidgetItem(
-                    f"Item {row+1},{col+1}"))
 
     def add_item_to_list(self):
         text = self.input_line.text()
@@ -299,7 +327,52 @@ class MainWindow(QMainWindow):
             self.list_widget.addItem(text)
             self.input_line.clear()
             self.save_items_to_file()
+    
+    def dodaj_progi_punktowe(self):
+        self.okno_do_progów = self.Okno_do_progów('items.txt')
+        self.okno_do_progów.show()
+    
+    
+    
 
+    class Okno_do_progów(QWidget):
+        def __init__(self,filename):
+            super().__init__()
+            self.filename = filename
+            self.initUI()
+            
+        def initUI(self):
+            self.setWindowTitle("Second Window")
+            self.setGeometry(100, 100, 400, 300)
+            
+            layout = QVBoxLayout()
+            self.listWidget = QListWidget(self)
+            
+            self.loadNames()
+            
+            layout.addWidget(self.listWidget)
+            self.setLayout(layout)
+
+        def loadNames(self):
+            try:
+                with open(self.filename, 'r') as file:
+                    names = file.readlines()
+                    for name in names:
+                        name = name.strip()
+                        if name:
+                            item = QListWidgetItem(self.listWidget)
+                            item_widget = ListItemWidget(name)
+                            item.setSizeHint(item_widget.sizeHint())
+                            self.listWidget.addItem(item)
+                            self.listWidget.setItemWidget(item, item_widget)
+            except Exception as e:
+                print(f"Error loading names from file: {e}")
+
+    
+
+    
+    
+        
     def open_sublist(self, item, splitter, current_data, level):
         if splitter.count() > 1:
             splitter.widget(1).deleteLater()
@@ -336,7 +409,7 @@ class MainWindow(QMainWindow):
         sublist_splitter.addWidget(sublist_widget)
 
         splitter.addWidget(sublist_splitter)
-        splitter.setSizes([100, 100])
+        splitter.setSizes([100, 100])   
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 1)
 
