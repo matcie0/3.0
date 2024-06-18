@@ -14,196 +14,333 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QDialog, QLineEd
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-class kalendarz:    
+class my_calendar:
     """
     Klasa obsługująca cały kalendarz: wczytywanie, zapisywanie,
     wyświetlanie oraz wszystkie potrzebne funkcje
     """
-
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Utworzenie kalendarza, narazie bez jego wyświetlenia.
         Wczytanie danych z pliku i utworzenie z nich potrzebnych
         zmiennych
         """
-        with open('kalendarz.txt', 'r') as file:
-            lines = file.readlines()
-            lista_krotek = [tuple(line.strip().split('\t')) for line in lines]
-        self.miesiace = []
-        self.czy_ustawiamy_dni_uczelniane = False
+        try:
+            #Wczytanie danych z pliku jako krotki
+            with open('kalendarz.txt', 'r') as file:
+                lines = file.readlines()
+                tuple_list = [tuple(line.strip().split('\t')) for line in lines]
+            self.months = [] 
+            months_list = []
+            #Stworzenie listy miesięcy, zawierającą listy z danymi
+            #zwiazanymi z dniamiw poszczególnych miesięcach
+            for x in range(1, 13):
+                months_list.append(
+                    [tuple for tuple in tuple_list if tuple[1] == str(x)])
+            #Posortowanie miesięcy
+            months_list = sorted(
+                months_list, key=lambda x: (int(x[0][2]), int(x[0][1])))
+            #Stworzenie listy zawierającej miesiące zapisane jako klasa my_month,
+            # w której znajdują się dni zapisane jako klasa my_day
+            for list_of_days_in_month in months_list:
+                days_list = []
+                for day in list_of_days_in_month:
+                    days_list.append(my_day(int(day[0]), int(
+                        day[1]), int(day[2]),day[3],day[4], eval(day[5])))
+                self.months.append(my_month(int(list_of_days_in_month[0][2]), int(
+                    list_of_days_in_month[0][1]), days_list))
+        except FileNotFoundError:
+            #Jeśli nie ma pliku, to tworzymy podstawowe aktualne dane
+            self.reset_calendar(True)
 
-        lista_miesięcy = []
-        for x in range(1, 13):
-            lista_miesięcy.append(
-                [krotka for krotka in lista_krotek if krotka[1] == str(x)])
-        lista_miesięcy = sorted(
-            lista_miesięcy, key=lambda x: (int(x[0][2]), int(x[0][1])))
-        for lista_dni_miesiąca in lista_miesięcy:
-            lista_dni = []
-            for dzień in lista_dni_miesiąca:
-                lista_dni.append(dzien(int(dzień[0]), int(
-                    dzień[1]), int(dzień[2]), dzień[3], dzień[4], eval(dzień[5])))
-            self.miesiace.append(miesiac(int(lista_dni_miesiąca[0][2]), int(
-                lista_dni_miesiąca[0][1]), lista_dni))
-        self.ustaw_wyswietlany_miesiąc_na_teraz()
 
-    def ustaw_wyswietlany_miesiąc_na_teraz(self):
+    def set_actual_month_to_now(self) -> None:
         """
-        Ustawienie wyswietlanego miesiąca na
-        miesiąc zgodny z aktualną datą
+        Ustawienie  numeru wyswietlanego miesiąca (w postaci numeru z listy)
+        namiesiąc zgodny z aktualną datą
         """
-        aktualny_miesiac = datetime.now().month
-        for pozycja_na_liscie in range(12):
-            if self.miesiace[pozycja_na_liscie].numer_miesiaca == aktualny_miesiac:
-                self.aktualnie_wyswietlany_miesiac = pozycja_na_liscie
+        actual_month=datetime.now().month
+        for position_in_list in range(12):
+            if self.months[position_in_list].month_number==actual_month:
+                self.displayed_month=position_in_list
 
-    def przesuń_wyswietlany_miesiac_o_x(self, x):
-        if self.aktualnie_wyswietlany_miesiac+x in list(range(12)):
-            self.aktualnie_wyswietlany_miesiac += x
-            self.wyswietl_aktualny_miesiac()
-
-    def zaktualizuj_kalendarz(self):
+    def change_displayed_month_by_x(self,x:int) -> None:
+        """
+        Przesuwa numer wyswietlanego miesiąca o x i go wyświetla
+        """
+        if self.displayed_month+x in list(range(12)):
+            self.displayed_month+=x
+            self.display_actual_month()
+            
+    def reset_calendar(self,is_in_init:bool = False) -> None:
         """
         Zrestartowanie kalendarza, czyli usunięcie wszystkich aktualnych
         danych oraz zastąpienie ich danymi zgodnymi z aktualną datą.
         """
-        self.miesiace = []
-        aktualna_data = datetime.now()
-
+        #Wyczyszczenie listy miesięcy
+        self.months = []
+        actual_date = datetime.now()
+        #Dodanie pięciu miesięcy przed aktualną datą
         for i in range(5, 0, -1):
-            poprzednia_data = aktualna_data - relativedelta(months=i)
-            self.miesiace.append(
-                miesiac(poprzednia_data.year, poprzednia_data.month))
-
-        self.miesiace.append(miesiac(aktualna_data.year, aktualna_data.month))
-
+            previous_date = actual_date - relativedelta(months=i)
+            self.months.append(
+                my_month(previous_date.year, previous_date.month))
+        #Dodanie aktualnego miesiąca
+        self.months.append(my_month(actual_date.year, actual_date.month))
+        #Dodanie 6 następnych miesięcy
         for i in range(1, 7):
-            przyszła_data = aktualna_data + relativedelta(months=i)
-            self.miesiace.append(
-                miesiac(przyszła_data.year, przyszła_data.month))
-        self.ustaw_wyswietlany_miesiąc_na_teraz()
-        self.wyswietl_aktualny_miesiac()
-
-    def zapisz_kalendarz(self):
+            comming_date = actual_date + relativedelta(months=i)
+            self.months.append(
+                my_month(comming_date.year, comming_date.month))
+        #Ustawienie aktualnie wyswietlanego miesiąca na teraz
+        self.set_actual_month_to_now()
+        #Jeśli funkcja nie jest wywołana w __Init__ to wyświetla aktualny miesiąc
+        if is_in_init==False:
+            self.display_actual_month()
+        
+    def save_calendar(self) -> None:
         """
         Zapisanie wprowadzonych od rozpoczęcia programu danych do pliku
         """
         with open('kalendarz.txt', 'w') as file:
             file.write('')
-            for x in self.miesiace:
-                for y in x.lista_dni:
-                    line = f"{y.dzien}\t{y.miesiac}\t{y.rok}\t{y.text}\t{y.notatka_poboczna}\t{y.czy_uczelniany}\n"
+            for x in self.months:
+                for y in x.list_of_days:
+                    line = f"{y.day}\t{y.month}\t{y.year}\t{y.text}\t{y.side_note}\t{y.is_university}\n"
                     file.write(line)
-
-    def wyswietl_aktualny_miesiac(self):
+                    
+    def display_actual_month(self) -> None:
         """
         Umieszczenie w tabeli kalendarza dni miesiąca zgodnego ze
         zmienną odpowiedzialną za aktualnie wyswietlany miesiąc
         """
-        for kolumna in range(1, 8):
-            for wiersz in range(5):
-                self.tabela_główna.removeCellWidget(wiersz, kolumna)
-        miesiac = self.miesiace[self.aktualnie_wyswietlany_miesiac]
-        aktualna_kolumna_do_wstawienia = miesiac.lista_dni[0].dzien_tygodnia+1
+        #Czyszczenie kalendarza z przycisków
+        for column in range(1,8):
+            for row in range(6):
+                self.main_table.removeCellWidget(row, column)
+        month=self.months[self.displayed_month]
+        #ustawienie kolumny w zależności jakim dniem tygodnia jest pierwszy dzien miesiaca
+        actual_column_to_set=month.list_of_days[0].day_of_week+1
+        #Ustawienie miesiąca, czyli wiersza na pierwszy
+        actual_week=0
+        #Przechodzenie po tabeli kolei po dniach i dodawanie przycisków
+        for day in range(len(month.list_of_days)):
+            if actual_column_to_set==8:
+                actual_column_to_set=1
+                actual_week+=1
+            month.list_of_days[day].insert_button(actual_week,actual_column_to_set,self.main_table)
+            actual_column_to_set+=1
+        #Zapisanie aktualnej daty w prawym górnym rogu
+        self.display_actual_date()
 
-        aktualny_tydzien = 0
-        for dzien in range(len(miesiac.lista_dni)):
-            if aktualna_kolumna_do_wstawienia == 8:
-                aktualna_kolumna_do_wstawienia = 1
-                aktualny_tydzien += 1
+    def set_everything_on_university(self) -> None:
+        """
+        Ustawia wszystkie dni aktualnie wyswietlanego miesiąca
+        (nie licząc weekendów) na uczelniane
+        """
+        for day in self.months[self.displayed_month].list_of_days:
+            if day.day_of_week in [0,1,2,3,4]:
+                day.is_university=True
+                day.refresh_button_colour()
 
-            miesiac.lista_dni[dzien].wstaw_przycisk(
-                aktualny_tydzien, aktualna_kolumna_do_wstawienia, self.tabela_główna)
-            aktualna_kolumna_do_wstawienia += 1
-        self.ustaw_aktualna_date_w_kalendarzu()
-
-    def ustaw_aktualna_date_w_kalendarzu(self):
+    def display_actual_date(self) -> None:
         """
         ustawia w prawym górnym rogu datę
         zgodną z aktualnie wyświetlanym miesiącem
         """
-        do_wyswietlenia = str(self.miesiace[self.aktualnie_wyswietlany_miesiac].numer_miesiaca)+'.'+str(
-            self.miesiace[self.aktualnie_wyswietlany_miesiac].rok)
-        self.tabela_główna.setItem(0, 9, QTableWidgetItem(do_wyswietlenia))
+        to_display=str(self.months[self.displayed_month].month_number)+'.'+str(self.months[self.displayed_month].year)
+        self.main_table.setItem(0, 9, QTableWidgetItem(to_display))
 
-    def inicjalizuj_kalendarz(self, Okno_nadrzedne):
+    def change_parametr_to_setting_days_to_university(self) -> None:
+        """
+        Zmienia wartość zmiennej odpowiedzialnej za to, czy po kliknięciu
+        w dzień uruchomi się okno tekstowe, czy zmieni się wartość 
+        zmiennej czy_uczelniany dla danego dnia
+        """
+        if my_day.button_command_parametr==True:
+            my_day.button_command_parametr=False
+            self.button_to_change_days_to_univeristy.setStyleSheet("background-color: white;")
+        else:
+            my_day.button_command_parametr=True
+            self.button_to_change_days_to_univeristy.setStyleSheet("background-color: blue;")
+
+    def initialize_calendar(self, parent_window) -> None:
         """
         Wyświetla kalendarz oraz wszystkie potrzebne przyciski
         """
+        #Utworzenie layoutu
         self.right_bottom_section_layout = QVBoxLayout()
-        self.tabela_główna = QTableWidget(5, 10)
-
+        #Utworzenie tabeli
+        self.main_table=QTableWidget(6, 10)
+        #Ustawienie szerokości kolumn
         for kolumna in range(9):
-            self.tabela_główna.setColumnWidth(kolumna, 60)
-        self.tabela_główna.setColumnWidth(9, 160)
-
-        for row in range(5):
-            self.tabela_główna.setRowHeight(row, 80)
-
-        przycisk_poprzedni = QPushButton("Poprzedni")
-        przycisk_nastepny = QPushButton("Nastepny")
-
-        self.tabela_główna.setCellWidget(2, 0, przycisk_poprzedni)
-        self.tabela_główna.setCellWidget(2, 8, przycisk_nastepny)
-        przycisk_poprzedni.clicked.connect(
-            lambda: self.przesuń_wyswietlany_miesiac_o_x(-1))
-        przycisk_nastepny.clicked.connect(
-            lambda: self.przesuń_wyswietlany_miesiac_o_x(1))
-
-        przycisk_resetowania = QPushButton("Resetuj")
-        self.tabela_główna.setCellWidget(4, 9, przycisk_resetowania)
-        przycisk_resetowania.clicked.connect(self.zaktualizuj_kalendarz)
-
-        przycisk_zapisywania = QPushButton("Zapisz zmiany")
-        self.tabela_główna.setCellWidget(3, 9, przycisk_zapisywania)
-        przycisk_zapisywania.clicked.connect(self.zapisz_kalendarz)
-
-        self.ustaw_aktualna_date_w_kalendarzu()
-
-        self.tabela_główna.setHorizontalHeaderLabels(
-            ["", "Pn", "Wt", "Śr", "Czw", "Pt", "So", "Nd", "", ""])
-        self.right_bottom_section_layout.addWidget(self.tabela_główna)
-
+            self.main_table.setColumnWidth(kolumna, 60)
+        self.main_table.setColumnWidth(9, 160)
+        self.main_table.setColumnWidth(8, 100)
+        self.main_table.setColumnWidth(0, 100)
+        #Ustawienie wysokości kolumn
+        for row in range(6):
+            self.main_table.setRowHeight(row, 60)
+        #utworzenie i dodatnie przyciskow przesuwających miesiące
+        button_previois=QPushButton("Poprzedni")
+        button_next=QPushButton("Nastepny")
+        self.main_table.setCellWidget(2, 0, button_previois)
+        self.main_table.setCellWidget(2, 8, button_next)
+        button_previois.clicked.connect(lambda: self.change_displayed_month_by_x(-1))
+        button_next.clicked.connect(lambda: self.change_displayed_month_by_x(1))
+        #Dodanie przycisku do zmiany dni na uniwersyteckie
+        self.button_to_change_days_to_univeristy=QPushButton("Zacznij ustawiać \n dni uczelniane")
+        self.main_table.setCellWidget(1, 9, self.button_to_change_days_to_univeristy)
+        self.button_to_change_days_to_univeristy.clicked.connect(self.change_parametr_to_setting_days_to_university)
+        #Dodanie przycisku do ustawienia wszystkich dni na uczelniane
+        button_set_everything_university=QPushButton("Ustaw wszystko\n na uczelniane")
+        self.main_table.setCellWidget(2, 9, button_set_everything_university)
+        button_set_everything_university.clicked.connect(self.set_everything_on_university)
+        #Dodane przycisku do resetu danych kalendarza
+        button_reset=QPushButton("Resetuj")
+        self.main_table.setCellWidget(4, 9, button_reset)
+        button_reset.clicked.connect(self.reset_calendar)
+        #Dodanie przycisku do zapisywania danych
+        button_save=QPushButton("Zapisz zmiany")
+        self.main_table.setCellWidget(3, 9, button_save)
+        button_save.clicked.connect(self.save_calendar)
+        #Ustawienie i wyświetlenie aktualnego miesiąca
+        self.set_actual_month_to_now()
+        self.display_actual_date()
+        #Dodanie nazw kolumn
+        self.main_table.setHorizontalHeaderLabels(["","Pn", "Wt", "Śr","Czw","Pt","So","Nd","",""])
+        #Dodanie sekcji do głównego okna
+        self.right_bottom_section_layout.addWidget(self.main_table)
         self.right_bottom_section_widget = QWidget()
-        self.right_bottom_section_widget.setLayout(
-            self.right_bottom_section_layout)
+        self.right_bottom_section_widget.setLayout(self.right_bottom_section_layout)
+        parent_window.addWidget(self.right_bottom_section_widget)
 
-        Okno_nadrzedne.addWidget(self.right_bottom_section_widget)
-
-
-class miesiac:
+class my_month:
     """
     Klasa odpowiadająca za dane związane z konkretnym miesiącem
     """
-
-    def __init__(self, rok, numer_miesiaca, lista_dni=[]):
+    def __init__(self, year:int, month_number:int, list_of_days:list=[]) -> None:
         """
         Utworzenie miesiąca z podaną już listą dni, lub tworzenie nowej
         """
-        self.numer_miesiaca = numer_miesiaca
-        self.rok = rok
-        if len(lista_dni) == 0:
-            self.lista_dni = list(dzien(x, numer_miesiaca, rok) for x in range(
-                1, calendar.monthrange(rok, numer_miesiaca)[1]+1))
+        self.month_number = month_number
+        self.year = year
+        if len(list_of_days) == 0:
+            self.list_of_days = list(my_day(x, month_number, year) for x in range(
+                1, calendar.monthrange(year, month_number)[1]+1))
         else:
-            self.lista_dni = lista_dni
+            self.list_of_days = list_of_days
 
+class Okienko_na_tekst(QDialog):
+    """
+    Klasa odpowiedzialna za wyswietlanie okna, w którym wpisywane
+    są notatki do danego dnia
+    """
+    def __init__(self,main_text:str,side_text:str,day:int,parent=None) -> None:
+        """
+        Utworzenie i wyswietlenie okna
+        """
+        super().__init__(parent)
+        self.main_text=main_text
+        self.side_text=side_text
+        #Ustawienie nazwy okna
+        self.setWindowTitle(f"Informacje o dniu {day}")
+        layout = QVBoxLayout()
+        #Ustawienie napisów i pól do wpisania notatek oraz dodanie ich do layoutu"
+        self.writing1 = QLabel("Ważne informacje o kolosach, egzaminach itd")
+        self.main_text = QLineEdit(self,text=self.main_text)
+        self.writing2 = QLabel("Mniej ważna notatka do dnia")
+        self.side_text = QLineEdit(self,text=self.side_text)
+        layout.addWidget(self.writing1)
+        layout.addWidget(self.main_text)
+        layout.addWidget(self.writing2)
+        layout.addWidget(self.side_text)
+        #Dodanie przycisków do zatwierdzenia wpisanych informacji
+        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+        layout.addWidget(self.buttons)
+        self.setLayout(layout)
+        
+    def give_notes(self) -> tuple:
+        """
+        Metoda, która zwraca wpisane notatki
+        """
+        return self.main_text.text(), self.side_text.text()
 
-class dzien:
-    def __init__(self, dzien, miesiac, rok, text="", notatka_poboczna="", czy_uczelniany=False):
-        self.dzien = dzien
-        self.miesiac = miesiac
-        self.rok = rok
-        self.dzien_tygodnia = calendar.weekday(rok, miesiac, dzien)
-        self.czy_uczelniany = czy_uczelniany
-        self.text = text
-        self.notatka_poboczna = notatka_poboczna
+class my_day:
+    """
+    Klasa odpowiedzialna za przechowywanie danych związanych z danym dniem
+    oraz metody potrzebne do obsługi przycisków
+    """
+    button_command_parametr=False
+    def __init__(self, day, month, year, text="",side_note="" ,is_university:bool=False) -> None:
+        """
+        Utworzenie dnia z podanymi potrzebnymi danymi
+        """
+        self.day = day
+        self.month = month
+        self.year = year
+        self.day_of_week = calendar.weekday(year, month, day)
+        self.is_university = is_university
+        self.side_note=side_note
+        self.text=text
 
-    def wstaw_przycisk(self, wiersz, kolumna, tabela):
-        self.przycisk = QPushButton(f"{self.dzien}")
-        tabela.setCellWidget(wiersz, kolumna, self.przycisk)
+    def change_the_is_university_attribute(self) -> None:
+        """
+        Zmieniamy wartośc zmiennej odpowiedzialnej za przechowywanie
+        informacji o tym, czy w dany dzień jest uczelnia
+        """
+        if self.is_university == True:
+            self.is_university = False
+        else:
+            self.is_university = True
 
-kalendarzyk = kalendarz()
+    def button_command(self) -> None:
+        """
+        Metoda odpowiedzialna za to, co się dzieje po kliknięciu przycisku dnia
+        """
+        if my_day.button_command_parametr==True:
+            self.change_the_is_university_attribute()
+        else:
+            self.open_the_window_with_notes()
+        self.refresh_button_colour()
+        
+    def open_the_window_with_notes(self) -> None:
+        """
+        Metoda odpowiedzialna za otwarcie okna z notatkami
+        """
+        window_for_text = Okienko_na_tekst(self.text,self.side_note,self.day,main_window)
+        if window_for_text.exec_() == QDialog.Accepted:
+            self.text, self.side_note = window_for_text.give_notes()
+            
+    def insert_button(self,row:int,column:int,table) -> None:
+        """
+        Metoda odpowiedzialna za utworzenie przycisku w podanym miejscu w tabeli
+        """
+        self.button = QPushButton(f"{self.day}")
+        table.setCellWidget(row, column, self.button)
+        self.button.clicked.connect(self.button_command)
+        self.refresh_button_colour()
+        
+    def refresh_button_colour(self) -> None:
+        """
+        metoda odpowiedzialna za odświeżenie koloru przycisku dnia,
+        w zależności od związanych z nim danych
+        """
+        #Jeśli jest główna notatka, ustawiamy na niebieski
+        if self.text!="":
+            self.button.setStyleSheet("background-color: blue")
+        #Jeśli nie ma głównej notatki, ale jest notatka poboczna ustawiamy na zielony"
+        elif self.side_note!="":
+            self.button.setStyleSheet("background-color: limegreen")
+        #Jeśli nie ma notatek, ale w dany dzien jest uczelnia, to ustawiamy na jasny niebieski
+        elif self.is_university==True:
+            self.button.setStyleSheet("background-color: lightblue")
+        #Jesli nic z powyższych, to ustawiamy na biały
+        else:
+            self.button.setStyleSheet("background-color: white")
+
 
 class PlotWidget(QWidget):
     def __init__(self, parent=None):
@@ -308,8 +445,9 @@ class MainWindow(QMainWindow):
 
 # Dodanie małych sekcji do głównego layoutu
         bottom_section_layout.addWidget(self.left_bottom_section_splitter)
-        kalendarzyk.inicjalizuj_kalendarz(bottom_section_layout)
-        kalendarzyk.wyswietl_aktualny_miesiac()
+        calendar1=my_calendar()
+        calendar1.initialize_calendar(bottom_section_layout)
+        calendar1.display_actual_month()
         bottom_section_layout.addWidget(right_bottom_section_widget)
         main_layout.addLayout(bottom_section_layout)
 
