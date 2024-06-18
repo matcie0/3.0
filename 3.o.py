@@ -480,8 +480,8 @@ class MainWindow(QMainWindow):
             self.initUI()
             
         def initUI(self):
-            self.setWindowTitle("Second Window")
-            self.setGeometry(100, 100, 400, 300)
+            self.setWindowTitle("Wpisz progi punktowe")
+            self.setGeometry(100, 100, 450, 400)
             
             layout = QVBoxLayout()
             self.listWidget = QListWidget(self)
