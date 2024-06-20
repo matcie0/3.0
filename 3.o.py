@@ -1,4 +1,5 @@
 import sys
+import json
 from PyQt5.QtCore import Qt
 import ast
 import os
@@ -427,16 +428,19 @@ class MainWindow(QMainWindow):
         self.input_line = QLineEdit()
         self.add_button = QPushButton("Dodaj przedmiot")
         self.add_button.clicked.connect(self.add_item_to_list)
+        self.delete_button = QPushButton("Usuń zaznaczony przedmiot")
+        self.delete_button.clicked.connect(self.usuwanie_rzeczy_z_list)
 
         #przycisk do dodawania progów punktowych dla przedmiotów
         self.input_line = QLineEdit()
         self.dodaj_progi_button = QPushButton("Dodaj progi")
         self.dodaj_progi_button.clicked.connect(self.dodaj_progi_punktowe)
+        
 
         self.left_bottom_section_layout.addWidget(self.input_line)
         self.left_bottom_section_layout.addWidget(self.add_button)
         self.left_bottom_section_layout.addWidget(self.dodaj_progi_button)
-
+        self.left_bottom_section_layout.addWidget(self.delete_button)
 
         self.left_bottom_section_splitter.addWidget(left_bottom_section_widget)
 
@@ -465,6 +469,37 @@ class MainWindow(QMainWindow):
             self.list_widget.addItem(text)
             self.input_line.clear()
             self.save_items_to_file()
+    def usuwanie_rzeczy_z_list(self):
+        wybierz_rzecz = self.list_widget.currentItem()
+        #wybieram rzecz, przedmiot/ punkty
+        if wybierz_rzecz:
+            #pobieram teraz ta nazwe 
+            tekst = wybierz_rzecz.text()
+            self.list_widget.takeItem(self.list_widget.row(wybierz_rzecz))
+            #teraz row dale mi indeks numer wiersza w naszym widgetcie rzeczy 
+            #którą chcemy usunąć, a takeItem(ideks) usuwa tą rzecz z widegtu,
+            #ale nie z pamięci, więc
+            if tekst in self.sublist_data:
+                del self.sublist_data[tekst]
+            #usuwamy cały element o kluczu tekst ze słownika
+            self.save_sublist_to_file()
+            self.save_items_to_file()
+            self.usun_zapis_sumy(tekst)
+
+    def usun_zapis_sumy(self, tekst):
+            #otwieram plik 
+            with open("sumowane_punkty.txt", "r") as file:
+                linijki = file.readlines()
+            #otwieram plik, by ponownie zapisac i usunac to czego nie chce
+            with open("sumowane_punkty.txt", "w") as file:
+                for x in linijki:
+                # sprawdzam, czy linia zawiera tekst do usuniecia i usuwam linie
+                        if tekst not in x:
+                            file.write(str(x))
+
+    
+    
+    
     
     def dodaj_progi_punktowe(self):
         self.okno_do_progów = self.Okno_do_progów('items.txt')
@@ -631,8 +666,23 @@ class MainWindow(QMainWindow):
 
     def zapis_sumy(self, parent_item_text, punkty_otrzymane):
         try:
-            with open("sumowane_punkty.txt", "a") as file:
-                file.write(f"{punkty_otrzymane}\n")
+            #tworze plik i pusty słowniczek
+            with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
+                file.write('{}')
+            # otwieram plik i czytam linijka po linijce 
+            with open("sumowane_punkty.txt", "r", encoding='utf-8') as file:
+                linijka = file.read()
+
+            #przerabiam na slownik za pmoca json (ułatwienie dla Olgi i Bartka)
+            if linijka.strip():
+                słownik = json.loads(linijka)
+
+            #dodaje wpisy do słownika
+            słownik[parent_item_text] = punkty_otrzymane
+
+            #zapisuje słownik do pliku w formacie json - z jego wymaganiami (dwa cudzyslowy ")
+            with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
+                json.dump(słownik, file, ensure_ascii=False)
         except Exception as e:
             print(f"Błąd przy zapisywaniu sumy, niepoprawne wartości: {e}")
 
