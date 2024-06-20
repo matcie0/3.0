@@ -487,6 +487,8 @@ class MainWindow(QMainWindow):
             self.usun_zapis_sumy(tekst)
 
     def usun_zapis_sumy(self, tekst):
+            with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
+                file.write('{}')
             #otwieram plik 
             with open("sumowane_punkty.txt", "r") as file:
                 linijki = file.readlines()
