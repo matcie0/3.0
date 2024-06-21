@@ -354,6 +354,8 @@ class PlotWidget(QWidget):
 
 #tu sie zmienia wykres
     def plot(self, data):
+        with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
+                file.write('{}')
         lista=[]
         procenty=[]
         with open('sumowane_punkty.txt', 'r') as file:
