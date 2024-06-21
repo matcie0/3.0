@@ -354,9 +354,21 @@ class PlotWidget(QWidget):
 
 #tu sie zmienia wykres
     def plot(self, data):
-        procenty=[1,20,30,40,80,90,100]
+        lista=[]
+        procenty=[]
+        with open('sumowane_punkty.txt', 'r') as file:
+            data = json.load(file)
+            print(data)
+        for items, values in data.items():
+            print(values)
+            for items1, values2 in values.items():
+                procenty.append(values2)
+                print(procenty)
+                lista.append(items1)
+                print(lista)
         self.axis.clear()
-        self.axis.bar(data,procenty)
+        self.axis.bar(lista,procenty)
+        self.axis.set_xticks(lista,lista)
         self.canvas.draw()
 
 
