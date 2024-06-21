@@ -1,3 +1,0 @@
-Algebra: 45
-Analiza matematyczna: 55
-Programowanie: 50
