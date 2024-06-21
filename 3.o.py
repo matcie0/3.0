@@ -354,26 +354,29 @@ class PlotWidget(QWidget):
 
 #tu sie zmienia wykres
     def plot(self, data):
-        with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
+        if os.stat("sumowane_punkty.txt").st_size == 0:
+            with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
                 file.write('{}')
         lista=[]
         procenty=[]
-        with open('sumowane_punkty.txt', 'r') as file:
+        if os.stat("procenty.txt").st_size == 0:
+            with open("procenty.txt", "w", encoding='utf-8') as file:
+                file.write('{}')
+        with open('procenty.txt', 'r') as file:
             data = json.load(file)
-            print(data)
-        for items, values in data.items():
-            print(values)
-            for items1, values2 in values.items():
+        
+            for items1, values2 in data.items():
                 procenty.append(values2)
-                print(procenty)
                 lista.append(items1)
-                print(lista)
         self.axis.clear()
         self.axis.bar(lista,procenty)
         self.axis.set_xticks(lista,lista)
+        self.axis.set_ylim(0,100)
         self.canvas.draw()
 
 
+
+# zapisywanie progów do pliku
 class ListItemWidget(QWidget):
     def __init__(self, name):
         super().__init__()
@@ -397,10 +400,26 @@ class ListItemWidget(QWidget):
     def saveText(self):
         text = self.textBox.text()
         try:
-            with open("progi.txt", 'a') as file:
-                file.write(f"{self.name}: {text}\n")
+            # Próbuj wczytać istniejące dane z pliku
+            try:
+                with open("progi.txt", 'r') as file:
+                    data = json.load(file)
+            except (FileNotFoundError, json.JSONDecodeError):
+                # Jeśli plik nie istnieje lub jest pusty, rozpocznij od pustego słownika
+                data = {}
+
+            # Dodaj nowy wpis do słownika
+            data[self.name] = float(text)
+
+            # Zapisz zaktualizowany słownik z powrotem do pliku
+            with open("progi.txt", 'w') as file:
+                json.dump(data, file, ensure_ascii=False, indent=4)
+            
         except Exception as e:
             print(f"Error saving text to file: {e}")
+            
+        
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -420,6 +439,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         main_layout = QVBoxLayout(central_widget)
+        
 
 
 
@@ -512,18 +532,13 @@ class MainWindow(QMainWindow):
                 # sprawdzam, czy linia zawiera tekst do usuniecia i usuwam linie
                         if tekst not in x:
                             file.write(str(x))
-
     
-    
-    
-    
+        
+    # funkcje do okna od wpisywania progów
     def dodaj_progi_punktowe(self):
         self.okno_do_progów = self.Okno_do_progów('items.txt')
         self.okno_do_progów.show()
     
-    
-    
-
     class Okno_do_progów(QWidget):
         def __init__(self,filename):
             super().__init__()
@@ -536,7 +551,6 @@ class MainWindow(QMainWindow):
             
             layout = QVBoxLayout()
             self.listWidget = QListWidget(self)
-            
             self.loadNames()
             
             layout.addWidget(self.listWidget)
@@ -558,10 +572,6 @@ class MainWindow(QMainWindow):
                 print(f"Error loading names from file: {e}")
 
     
-
-    
-    
-        
     def open_sublist(self, item, splitter, current_data, level):
         if splitter.count() > 1:
             splitter.widget(1).deleteLater()
@@ -654,7 +664,7 @@ class MainWindow(QMainWindow):
             pass
         except Exception as e:
             print(f"Error loading sublists: {e}")
-# Kod by zliczało sumę punktów
+# Kod by zliczało sumę punktów i liczyło procenty
 
     def suma(self, parent_item_text):
         try:
@@ -678,7 +688,47 @@ class MainWindow(QMainWindow):
         except ValueError:
             QMessageBox.warning(
                 self, "Błąd", "Zostały wprowadzone niepoprawne dane, upwenij się, że są to liczby")
-# robię teraz aby suma się zapisywała w pliku txt
+    # robię teraz aby suma się zapisywała w pliku txt
+    #Wyliczanie procentów dla każdego przedmiotu
+        try:
+            # Wczytaj dane z pliku progi.txt
+            with open("progi.txt", 'r') as file:
+                progi = json.load(file)
+            
+            # Wczytaj dane z pliku sumowane_punkty.txt
+            with open("sumowane_punkty.txt", 'r') as file:
+                sumowane_punkty = json.load(file)
+
+            # Utwórz nowy słownik na przechowywanie wyników
+            procenty = {}
+
+            # Oblicz
+            for key in sumowane_punkty:
+                if key in progi:
+                    try:
+                        procenty[key] = (sumowane_punkty[key] / progi[key]) * 100
+                    except ZeroDivisionError:
+                        procenty[key] = None  # lub inna wartość oznaczająca błąd podziału przez zero
+                else:
+                    procenty[key] = None  # lub inna wartość oznaczająca brakujące dane w progi
+
+            # Zapisz wyniki do pliku procenty.txt
+            with open("procenty.txt", 'w') as file:
+                json.dump(procenty, file, ensure_ascii=False, indent=4)
+
+            print(f"Successfully wrote to file: {procenty}")
+
+        except FileNotFoundError as e:
+            print(f"File not found: {e}")
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+        except Exception as e:
+            print(f"Error: {e}")
+        self.plot_widget.plot([0, 1, 0, 3, 7,2,6])
+        self.plot_widget.repaint()
+        self.plot_widget.update()
+        
+        
 
     def zapis_sumy(self, parent_item_text, punkty_otrzymane):
         try:
@@ -693,12 +743,9 @@ class MainWindow(QMainWindow):
             if linijka.strip():
                 słownik = json.loads(linijka)
 
-            #dodaje wpisy do słownika
-            słownik[parent_item_text] = punkty_otrzymane
-
             #zapisuje słownik do pliku w formacie json - z jego wymaganiami (dwa cudzyslowy ")
             with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
-                json.dump(słownik, file, ensure_ascii=False)
+                json.dump(punkty_otrzymane, file, ensure_ascii=False)
         except Exception as e:
             print(f"Błąd przy zapisywaniu sumy, niepoprawne wartości: {e}")
 
