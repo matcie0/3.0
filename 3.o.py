@@ -748,6 +748,74 @@ class MainWindow(QMainWindow):
                 json.dump(punkty_otrzymane, file, ensure_ascii=False)
         except Exception as e:
             print(f"Błąd przy zapisywaniu sumy, niepoprawne wartości: {e}")
+            
+import unittest
+
+class Tests(unittest.TestCase):
+
+    def test_1(self):
+        """
+        Test sprawdza, czy bez podanej liczby dni, jedynie z rokiem i miesiącem, dane zostaną 
+        poprawnie ustawione
+        """
+        year = 2024
+        month_number = 6
+        month1 = my_month(year, month_number)
+
+        self.assertEqual(month1.year, year)
+        self.assertEqual(month1.month_number, month_number)
+        self.assertEqual(len(month1.list_of_days), calendar.monthrange(year, month_number)[1])
+        self.assertTrue(all(isinstance(day, my_day) for day in month1.list_of_days))
+
+    def test_2(self):
+        """
+        Test sprawdza, czy klasa zadziała dobrze dla szczególnego przypadku podania konkretnych dni
+        """
+        year = 2024
+        month_number = 6
+        days = [my_day(1, month_number, year), my_day(2, month_number, year)]
+        month_ex = my_month(year, month_number, days)
+
+        self.assertEqual(month_ex.year, year)
+        self.assertEqual(month_ex.month_number, month_number)
+        self.assertEqual(len(month_ex.list_of_days), 2)
+        self.assertEqual(month_ex.list_of_days, days)
+
+    def test_3(self):
+        """
+        Test sprawdza, czy klasa poprawnie ustawi datę bez podania dni
+        """
+        year = 2024
+        month_number = 12
+        month1 = my_month(year, month_number)
+        self.assertEqual(month1.year, year)
+        self.assertEqual(month1.month_number, month_number)
+
+    def test_4(self):
+        """
+        Test sprawdza, czy klasa my_day odpowiednio ustawia odpowiednio dzień tygodnia
+        """
+        #Wybieramy dzień, miesiąc oraz rok, dla którego będziemy testować ustawienie
+        day1_test = 1
+        month1_test = 6
+        year1_test = 2024
+        day1 = my_day(day1_test, month1_test, year1_test)
+        day2 = calendar.weekday(year1_test, month1_test, day1_test)
+        self.assertEqual(day1.day_of_week, day2)
+
+    def test_5(self):
+        """
+        Test sprawdza, czy klasa odrzuci niepoprawne dane
+        """
+        #Sprawdzimy czy dla błędnych danych klasa zwróci błąd
+        year = ABC
+        month_number = 10
+        month1 = my_month(year, month_number)
+        self.assertEqual(month1.year, year)
+        self.assertEqual(month1.month_number, month_number)
+
+#Testy testuje się osobno od uruchamiania aplikacji
+#unittest.main() 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
