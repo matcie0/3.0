@@ -1,19 +1,20 @@
+import os
+import ast
 import sys
 import json
-from PyQt5.QtCore import Qt
-import ast
-import os
-from dateutil.relativedelta import relativedelta
-from datetime import datetime
+import unittest
 import calendar
+from PyQt5.QtCore import Qt
+from datetime import datetime
+from matplotlib.figure import Figure
+import matplotlib.patheffects as path_effects
+from dateutil.relativedelta import relativedelta
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QTableWidget,
-    QTableWidgetItem, QListWidget, QPushButton, QLineEdit, QLabel, QSplitter, QInputDialog, QMessageBox, QListWidgetItem, 
+    QTableWidgetItem, QListWidget, QPushButton, QLineEdit, QLabel, QSplitter,
+    QMessageBox, QListWidgetItem, QDialog, QDialogButtonBox
 )
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QDialog, QLineEdit, QLabel, QPushButton, QDialogButtonBox
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 
 class my_calendar:
     """
@@ -342,7 +343,6 @@ class my_day:
         else:
             self.button.setStyleSheet("background-color: white")
 
-
 class PlotWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -352,7 +352,7 @@ class PlotWidget(QWidget):
         self.layout.addWidget(self.canvas)
         self.setLayout(self.layout)
 
-#tu sie zmienia wykres
+    #tu sie zmienia wykres
     def plot(self, data):
         if os.stat("sumowane_punkty.txt").st_size == 0:
             with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
@@ -369,12 +369,24 @@ class PlotWidget(QWidget):
                 procenty.append(values2)
                 lista.append(items1)
         self.axis.clear()
-        self.axis.bar(lista,procenty)
+        bars = self.axis.bar(lista,procenty, color='mediumslateblue')
         self.axis.set_xticks(lista,lista)
         self.axis.set_ylim(0,100)
+        
+        for bar in bars:
+            text = self.axis.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 1,
+                round(bar.get_height(), 1),
+                fontsize=15,
+                horizontalalignment='center',
+                color='lime',
+                )
+
+            text.set_path_effects([path_effects.Stroke(linewidth=2, foreground='gray'),
+                path_effects.Normal()])    
+            
         self.canvas.draw()
-
-
 
 # zapisywanie progów do pliku
 class ListItemWidget(QWidget):
@@ -390,7 +402,6 @@ class ListItemWidget(QWidget):
         self.textBox = QLineEdit()
         self.saveButton = QPushButton("Zapisz")
         self.saveButton.clicked.connect(self.saveText)
-        
         layout.addWidget(self.label)
         layout.addWidget(self.textBox)
         layout.addWidget(self.saveButton)
@@ -419,8 +430,6 @@ class ListItemWidget(QWidget):
             print(f"Error saving text to file: {e}")
             
         
-
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()  # odwołujemy się do rodzica - QMainWindow
@@ -440,8 +449,6 @@ class MainWindow(QMainWindow):
 
         main_layout = QVBoxLayout(central_widget)
         
-
-
 
 # Dodanie dużej sekcji do głównego layoutu
         main_layout.addLayout(top_section_layout)
@@ -716,7 +723,6 @@ class MainWindow(QMainWindow):
             with open("procenty.txt", 'w') as file:
                 json.dump(procenty, file, ensure_ascii=False, indent=4)
 
-            print(f"Successfully wrote to file: {procenty}")
 
         except FileNotFoundError as e:
             print(f"File not found: {e}")
@@ -729,7 +735,6 @@ class MainWindow(QMainWindow):
         self.plot_widget.update()
         
         
-
     def zapis_sumy(self, parent_item_text, punkty_otrzymane):
         try:
             #tworze plik i pusty słowniczek
@@ -749,8 +754,6 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(f"Błąd przy zapisywaniu sumy, niepoprawne wartości: {e}")
             
-import unittest
-
 class Tests(unittest.TestCase):
 
     def test_1(self):
@@ -808,7 +811,7 @@ class Tests(unittest.TestCase):
         Test sprawdza, czy klasa odrzuci niepoprawne dane
         """
         #Sprawdzimy czy dla błędnych danych klasa zwróci błąd
-        year = ABC
+        year = "ABC"
         month_number = 10
         month1 = my_month(year, month_number)
         self.assertEqual(month1.year, year)
