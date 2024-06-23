@@ -767,8 +767,6 @@ class MainWindow(QMainWindow):
             with open("procenty.txt", 'w') as file:
                 json.dump(percent, file, ensure_ascii=False, indent=4)
 
-            print(f"Successfully wrote to file: {percent}")
-
         except FileNotFoundError as e:
             print(f"File not found: {e}")
         except json.JSONDecodeError as e:
