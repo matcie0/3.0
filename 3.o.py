@@ -759,9 +759,9 @@ class MainWindow(QMainWindow):
                     try:
                         percent[key] = (sum_points[key] / progi[key]) * 100
                     except ZeroDivisionError:
-                        percent[key] = None  # lub inna wartość oznaczająca błąd podziału przez zero
+                        percent[key] = 0  # lub inna wartość oznaczająca błąd podziału przez zero
                 else:
-                    percent[key] = None  # lub inna wartość oznaczająca brakujące dane w progu
+                    percent[key] = 0  # lub inna wartość oznaczająca brakujące dane w progu
 
             # Zapisz wyniki do pliku procenty.txt
             with open("procenty.txt", 'w') as file:
