@@ -382,7 +382,7 @@ class MyDay:
 
 
 class PlotWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent = None) -> None:
         super().__init__(parent)
         self.canvas = FigureCanvas(Figure())
         self.axis = self.canvas.figure.add_subplot(111)
@@ -391,7 +391,7 @@ class PlotWidget(QWidget):
         self.setLayout(self.layout)
 
     # Tu zmienia się wykres
-    def plot(self, data):
+    def plot(self, data:[dict[str:float]]) -> None:
         if os.stat("sumowane_punkty.txt").st_size == 0:
             with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
                 file.write('{}')
@@ -429,12 +429,12 @@ class PlotWidget(QWidget):
 
 # Zapisywanie progów do pliku
 class ListItemWidget(QWidget):
-    def __init__(self, name):
+    def __init__(self, name:str) -> None:
         super().__init__()
         self.name = name
         self.initUI()
     
-    def initUI(self):
+    def initUI(self) -> None:
         layout = QHBoxLayout()
         
         self.label = QLabel(self.name)
@@ -448,7 +448,7 @@ class ListItemWidget(QWidget):
         
         self.setLayout(layout)
     
-    def save_text(self):
+    def save_text(self) -> None:
         text = self.textBox.text()
         try:
             # Próbuj wczytać istniejące dane z pliku
@@ -471,7 +471,7 @@ class ListItemWidget(QWidget):
  
  
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # Odwołujemy się do rodzica - QMainWindow
@@ -546,14 +546,14 @@ class MainWindow(QMainWindow):
         self.load_items_from_file()
         self.load_sublists_from_file()
 
-    def add_item_to_list(self):
+    def add_item_to_list(self) -> None:
         text = self.input_line.text()
         if text:
             self.list_widget.addItem(text)
             self.input_line.clear()
             self.save_items_to_file()
 
-    def remove_item_from_list(self):
+    def remove_item_from_list(self) -> None:
         select_item = self.list_widget.currentItem()
         # Wybieram rzecz, przedmiot/ punkty
         if select_item:
@@ -570,7 +570,7 @@ class MainWindow(QMainWindow):
             self.save_items_to_file()
             self.remove_sum_record(text)
 
-    def remove_sum_record(self, text):
+    def remove_sum_record(self, text: str) -> None:
             with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
                 file.write('{}')
             # Otwieram plik 
@@ -584,17 +584,17 @@ class MainWindow(QMainWindow):
                             file.write(str(x))
           
     # Funkcje do okna od wpisywania progów
-    def add_score_thresholds(self):
+    def add_score_thresholds(self) -> None:
         self.threshold_window = self.ThresholdWindow('items.txt')
         self.threshold_window.show()
 
     class ThresholdWindow(QWidget):
-        def __init__(self,filename):
+        def __init__(self,filename:str) -> None:
             super().__init__()
             self.filename = filename
             self.initUI()
                 
-        def initUI(self):
+        def initUI(self) -> None:
             self.setWindowTitle("Wpisz progi punktowe")
             self.setGeometry(100, 100, 450, 400)
                 
@@ -605,7 +605,7 @@ class MainWindow(QMainWindow):
             layout.addWidget(self.listWidget)
             self.setLayout(layout)
 
-        def loadNames(self):
+        def loadNames(self) -> None:
             try:
                 with open(self.filename, 'r') as file:
                     names = file.readlines()
@@ -666,7 +666,7 @@ class MainWindow(QMainWindow):
             sublist.itemClicked.connect(lambda sub_item: self.open_sublist(
                 sub_item, sublist_splitter, current_data[item.text()]["sublists"], 2))
 
-    def add_item_to_sublist(self, sublist, sub_input_line, parent_item_text, current_data, level):
+    def add_item_to_sublist(self, sublist:QListWidget, sub_input_line:QLineEdit, parent_item_text:str, current_data:dict[str, any], level:int) -> None:
         text = sub_input_line.text()
         if text:
             sublist.addItem(text)
@@ -677,13 +677,13 @@ class MainWindow(QMainWindow):
             current_data[parent_item_text]["items"].append(text)
             self.save_sublist_to_file()
 
-    def save_items_to_file(self):
+    def save_items_to_file(self) -> None:
         items = [self.list_widget.item(i).text()
                  for i in range(self.list_widget.count())]
         with open("items.txt", "w") as file:
             file.write("\n".join(items))
 
-    def load_items_from_file(self):
+    def load_items_from_file(self) -> None:
         try:
             with open("items.txt", "r") as file:
                 items = file.readlines()
@@ -692,16 +692,16 @@ class MainWindow(QMainWindow):
         except FileNotFoundError:
             pass
 
-    def save_sublist_to_file(self):
-        def serialize_sublists(data):
+    def save_sublist_to_file(self) -> None:
+        def serialize_sublists(data: dict[str, any])-> dict[str, any]:
             return {key: {"items": value["items"], "sublists": serialize_sublists(value["sublists"])} for key, value in data.items()}
 
         serialized_data = serialize_sublists(self.sublist_data)
         with open("sublists.txt", "w") as file:
             file.write(str(serialized_data))
 
-    def load_sublists_from_file(self):
-        def deserialize_sublists(data):
+    def load_sublists_from_file(self) -> None:
+        def deserialize_sublists(data: dict[str, any])-> dict[str, any]:
             return {key: {"items": value["items"], "sublists": deserialize_sublists(value["sublists"])} for key, value in data.items()}
 
         try:
@@ -716,7 +716,7 @@ class MainWindow(QMainWindow):
             print(f"Error loading sublists: {e}")
 
     # Kod by zliczało sumę punktów i liczyło procenty
-    def sum(self, parent_item_text):
+    def sum(self, parent_item_text: str) -> None:
         try:
             points_received = {}  # Słownik przechowujący sume pkt.
 
@@ -759,13 +759,15 @@ class MainWindow(QMainWindow):
                     try:
                         percent[key] = (sum_points[key] / progi[key]) * 100
                     except ZeroDivisionError:
-                        percent[key] = 0  # lub inna wartość oznaczająca błąd podziału przez zero
+                        percent[key] = None  # lub inna wartość oznaczająca błąd podziału przez zero
                 else:
-                    percent[key] = 0  # lub inna wartość oznaczająca brakujące dane w progu
+                    percent[key] = None  # lub inna wartość oznaczająca brakujące dane w progu
 
             # Zapisz wyniki do pliku procenty.txt
             with open("procenty.txt", 'w') as file:
                 json.dump(percent, file, ensure_ascii=False, indent=4)
+
+            print(f"Successfully wrote to file: {percent}")
 
         except FileNotFoundError as e:
             print(f"File not found: {e}")
@@ -778,7 +780,7 @@ class MainWindow(QMainWindow):
         self.plot_widget.repaint()
         self.plot_widget.update()
               
-    def record_sum(self, parent_item_text, punkty_otrzymane):
+    def record_sum(self, parent_item_text: str, punkty_otrzymane: float) -> None:
         try:
             # Tworzę plik i pusty słownik
             with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
