@@ -855,6 +855,7 @@ class Tests(unittest.TestCase):
     def test_5(self):
         """
         Test sprawdza, czy klasa odrzuci niepoprawne dane
+        Tutaj powinno wyświetlić błąd
         """
         # Sprawdzimy czy dla błędnych danych klasa zwróci błąd
         year = "ABC"
