@@ -283,9 +283,9 @@ class TextWindow(QDialog):
         layout = QVBoxLayout()
 
         # Ustawienie napisów i pól do wpisania notatek oraz dodanie ich do layoutu
-        self.writing1 = QLabel("Ważne informacje o kolosach, egzaminach itd")
+        self.writing1 = QLabel("Ważne wydarzenie")
         self.main_text = QLineEdit(self,text=self.main_text)
-        self.writing2 = QLabel("Mniej ważna notatka do dnia")
+        self.writing2 = QLabel("Notatka")
         self.side_text = QLineEdit(self,text=self.side_text)
         layout.addWidget(self.writing1)
         layout.addWidget(self.main_text)
@@ -391,7 +391,7 @@ class PlotWidget(QWidget):
         self.setLayout(self.layout)
 
     # Tu zmienia się wykres
-    def plot(self, data:[dict[str:float]]) -> None:
+    def plot(self, data) -> None:
         if os.stat("sumowane_punkty.txt").st_size == 0:
             with open("sumowane_punkty.txt", "w", encoding='utf-8') as file:
                 file.write('{}')
@@ -759,15 +759,14 @@ class MainWindow(QMainWindow):
                     try:
                         percent[key] = (sum_points[key] / progi[key]) * 100
                     except ZeroDivisionError:
-                        percent[key] = None  # lub inna wartość oznaczająca błąd podziału przez zero
+                        percent[key] = 0  # lub inna wartość oznaczająca błąd podziału przez zero
                 else:
-                    percent[key] = None  # lub inna wartość oznaczająca brakujące dane w progu
+                    percent[key] = 0  # lub inna wartość oznaczająca brakujące dane w progu
 
             # Zapisz wyniki do pliku procenty.txt
             with open("procenty.txt", 'w') as file:
                 json.dump(percent, file, ensure_ascii=False, indent=4)
 
-            print(f"Successfully wrote to file: {percent}")
 
         except FileNotFoundError as e:
             print(f"File not found: {e}")
