@@ -3,7 +3,7 @@ Aplikacja "3.0" przygotowana na kurs "Programowanie" w zespole pięcioosobowym.
 
 ## Opis projektu:
 
-Kompleksowa aplikacja desktopowa wspomagająca śledzenie wyników w nauce. Narzędzie pozwala studentom na bieżąco monitorować postępy w nauce poprzez zestawianie zdobytych punktów z progami ocen, oferując natychmiastową wizualizację danych.
+Kompleksowa aplikacja desktopowa wspomagająca śledzenie wyników w nauce. Narzędzie pozwala studentom na bieżąco monitorować postępy poprzez zestawianie zdobytych punktów z progami ocen, oferując natychmiastową wizualizację danych.
 
 ### Dokumentacja Projektowa:
 
